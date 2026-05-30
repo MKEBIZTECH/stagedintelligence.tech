@@ -8,728 +8,351 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: #080810;
-      color: #e8e8f0;
-      font-family: 'Space Mono', monospace;
-      overflow: hidden;
-      height: 100vh;
-    }
-
-    canvas {
-      display: block;
-      cursor: none;
-    }
-
-    /* HUD overlay */
-    #hud {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    /* Back link */
-    #back {
-      position: fixed;
-      top: 24px;
-      left: 28px;
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      color: rgba(255,255,255,0.3);
-      text-decoration: none;
-      text-transform: uppercase;
-      pointer-events: all;
-      transition: color 0.2s;
-      z-index: 20;
-    }
+    body { background: #080810; color: #e8e8f0; font-family: 'Space Mono', monospace; overflow: hidden; height: 100vh; }
+    canvas { display: block; }
+    #back { position: fixed; top: 24px; left: 28px; font-size: 11px; letter-spacing: 0.15em; color: rgba(255,255,255,0.3); text-decoration: none; text-transform: uppercase; z-index: 20; transition: color 0.2s; }
     #back:hover { color: rgba(255,255,255,0.8); }
-
-    /* Title */
-    #title {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      pointer-events: none;
-      z-index: 20;
-    }
-    #title .brand {
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      color: rgba(68,170,255,0.6);
-      text-transform: uppercase;
-    }
-    #title .name {
-      font-family: 'Syne', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.8);
-      margin-top: 2px;
-    }
-
-    /* Math panel */
-    #math {
-      position: fixed;
-      right: 24px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 260px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .math-card {
-      background: rgba(14,14,26,0.85);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-left: 2px solid rgba(68,170,255,0.4);
-      padding: 12px 16px;
-      backdrop-filter: blur(8px);
-    }
-
-    .math-card h3 {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(68,170,255,0.7);
-      margin-bottom: 8px;
-    }
-
-    .math-eq {
-      font-style: italic;
-      font-size: 11px;
-      color: rgba(255,200,80,0.9);
-      margin-bottom: 6px;
-      line-height: 1.4;
-    }
-
-    .math-vals {
-      font-size: 10px;
-      line-height: 1.8;
-      color: rgba(255,255,255,0.4);
-    }
-
-    .math-vals span {
-      color: #2ecc71;
-      font-weight: 700;
-    }
-
-    /* Stage indicator */
-    #stage-panel {
-      position: fixed;
-      left: 24px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 200px;
-    }
-
-    .stage-label {
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(68,170,255,0.7);
-      margin-bottom: 10px;
-    }
-
-    .stage-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      font-size: 10px;
-      color: rgba(255,255,255,0.2);
-      transition: color 0.3s;
-    }
-
-    .stage-item.active {
-      color: rgba(255,255,255,0.9);
-    }
-
-    .stage-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      flex-shrink: 0;
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-
-    .stage-item.active .stage-dot {
-      background: #4af;
-      box-shadow: 0 0 8px rgba(68,170,255,0.6);
-    }
-
-    .stage-item.complete .stage-dot {
-      background: #2ecc71;
-    }
-
-    .stage-item.complete {
-      color: rgba(255,255,255,0.4);
-    }
-
-    /* Hint */
-    #hint {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      color: rgba(255,255,255,0.2);
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    /* Contact indicator */
-    #contacts {
-      position: fixed;
-      bottom: 28px;
-      right: 24px;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .contact-label {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      color: rgba(255,255,255,0.25);
-      text-transform: uppercase;
-      margin-right: 4px;
-    }
-
-    .finger-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
-      transition: background 0.15s, box-shadow 0.15s;
-    }
-
-    .finger-dot.contact {
-      background: #2ecc71;
-      box-shadow: 0 0 6px rgba(46,204,113,0.7);
-      border-color: rgba(46,204,113,0.4);
-    }
-
-    /* Force bar */
-    #force-bar-container {
-      position: fixed;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 200px;
-      text-align: center;
-    }
-
-    .force-label {
-      font-size: 9px;
-      letter-spacing: 0.15em;
-      color: rgba(255,255,255,0.2);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .force-track {
-      height: 2px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 1px;
-      overflow: hidden;
-    }
-
-    .force-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4af, #2ecc71);
-      width: 0%;
-      transition: width 0.1s;
-      border-radius: 1px;
-    }
+    #title { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 20; }
+    #title .brand { font-size: 10px; letter-spacing: 0.25em; color: rgba(68,170,255,0.6); text-transform: uppercase; }
+    #title .name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.8); margin-top: 2px; }
+    #math { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); width: 220px; display: flex; flex-direction: column; gap: 7px; pointer-events: none; }
+    .math-card { background: rgba(10,10,22,0.92); border-left: 2px solid rgba(68,170,255,0.4); padding: 10px 14px; }
+    .math-card h3 { font-size: 9px; letter-spacing: 0.15em; color: rgba(68,170,255,0.7); margin-bottom: 4px; text-transform: uppercase; }
+    .math-eq { font-size: 11px; color: #f0c040; font-style: italic; margin-bottom: 4px; line-height: 1.4; }
+    .math-vals { font-size: 10px; line-height: 1.8; color: rgba(255,255,255,0.38); }
+    .math-vals b { color: #2ecc71; font-weight: 700; }
+    #stage-panel { position: fixed; left: 24px; top: 50%; transform: translateY(-50%); width: 190px; pointer-events: none; }
+    .stage-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(68,170,255,0.7); margin-bottom: 10px; }
+    .stage-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 10px; color: rgba(255,255,255,0.18); transition: color 0.25s; }
+    .stage-item.active { color: rgba(255,255,255,0.95); }
+    .stage-item.complete { color: rgba(255,255,255,0.35); }
+    .stage-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1); flex-shrink: 0; transition: background 0.25s; }
+    .stage-item.active .stage-dot { background: #4af; box-shadow: 0 0 8px rgba(68,170,255,0.6); }
+    .stage-item.complete .stage-dot { background: #2ecc71; }
+    #hint { position: fixed; bottom: 52px; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 0.12em; color: rgba(255,255,255,0.22); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+    #hint.on { color: rgba(46,204,113,0.8); }
+    #grip-btn { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: rgba(68,170,255,0.12); border: 1px solid rgba(68,170,255,0.35); color: rgba(68,170,255,0.9); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; padding: 9px 28px; border-radius: 3px; cursor: pointer; font-family: 'Space Mono', monospace; transition: all 0.2s; z-index: 20; user-select: none; }
+    #grip-btn:hover { background: rgba(68,170,255,0.22); }
+    #grip-btn.on { background: rgba(46,204,113,0.18); border-color: rgba(46,204,113,0.45); color: rgba(46,204,113,0.95); }
+    #contacts { position: fixed; bottom: 18px; right: 24px; display: flex; gap: 6px; align-items: center; pointer-events: none; }
+    .contact-label { font-size: 9px; letter-spacing: 0.12em; color: rgba(255,255,255,0.2); text-transform: uppercase; margin-right: 3px; }
+    .finger-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); transition: background 0.12s; }
+    .finger-dot.contact { background: #2ecc71; box-shadow: 0 0 6px rgba(46,204,113,0.7); }
+    #force-bar { position: fixed; bottom: 52px; left: 24px; width: 150px; pointer-events: none; }
+    .force-label { font-size: 9px; letter-spacing: 0.12em; color: rgba(255,255,255,0.18); text-transform: uppercase; margin-bottom: 4px; }
+    .force-track { height: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; }
+    .force-fill { height: 100%; background: linear-gradient(90deg, #4af, #2ecc71); width: 0%; border-radius: 1px; transition: width 0.08s; }
   </style>
 </head>
 <body>
-
 <canvas id="app"></canvas>
+<a href="/" id="back">← Back</a>
+<div id="title"><div class="brand">Staged Intelligence Tech</div><div class="name">Ball Gripper</div></div>
 
-<div id="hud">
-  <a href="/" id="back">← Back</a>
-
-  <div id="title">
-    <div class="brand">Staged Intelligence Tech</div>
-    <div class="name">Ball Gripper</div>
-  </div>
-
-  <!-- Stage panel -->
-  <div id="stage-panel">
-    <div class="stage-label">SI Stages</div>
-    <div class="stage-item" id="s1">
-      <div class="stage-dot"></div>
-      <span>1 · Visual Acquisition</span>
-    </div>
-    <div class="stage-item" id="s2">
-      <div class="stage-dot"></div>
-      <span>2 · Approach</span>
-    </div>
-    <div class="stage-item" id="s3">
-      <div class="stage-dot"></div>
-      <span>3 · Pre-Shape</span>
-    </div>
-    <div class="stage-item" id="s4">
-      <div class="stage-dot"></div>
-      <span>4 · Contact</span>
-    </div>
-    <div class="stage-item" id="s5">
-      <div class="stage-dot"></div>
-      <span>5 · Grip & Hold</span>
-    </div>
-  </div>
-
-  <!-- Math panel -->
-  <div id="math">
-    <div class="math-card">
-      <h3>Synergy 1 — Aperture</h3>
-      <div class="math-eq">A = 1.2 × D<sub>ball</sub></div>
-      <div class="math-vals">
-        Target: <span id="m-aperture">0.00</span> m<br>
-        Current: <span id="m-aperture-cur">0.00</span> m
-      </div>
-    </div>
-
-    <div class="math-card">
-      <h3>Synergy 2 — PC1 Finger Closure</h3>
-      <div class="math-eq">θ<sub>i</sub> = w<sub>i</sub> × PC1 × closure</div>
-      <div class="math-vals">
-        PC1: <span id="m-pc1">0.00</span><br>
-        Closure: <span id="m-closure">0%</span>
-      </div>
-    </div>
-
-    <div class="math-card">
-      <h3>Approach Velocity</h3>
-      <div class="math-eq">v = 0.1 × (d / d<sub>max</sub>)</div>
-      <div class="math-vals">
-        Distance: <span id="m-dist">0.00</span> m<br>
-        Speed: <span id="m-speed">0.00</span> m/s
-      </div>
-    </div>
-
-    <div class="math-card">
-      <h3>Grip Force</h3>
-      <div class="math-eq">F = 1.8 × m × g</div>
-      <div class="math-vals">
-        Force: <span id="m-force">0.0</span> N<br>
-        Contact: <span id="m-contact">0 / 5</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Force bar -->
-  <div id="force-bar-container">
-    <div class="force-label">Grip Force</div>
-    <div class="force-track"><div class="force-fill" id="force-fill"></div></div>
-  </div>
-
-  <!-- Finger contacts -->
-  <div id="contacts">
-    <span class="contact-label">Fingers</span>
-    <div class="finger-dot" id="fd0"></div>
-    <div class="finger-dot" id="fd1"></div>
-    <div class="finger-dot" id="fd2"></div>
-    <div class="finger-dot" id="fd3"></div>
-    <div class="finger-dot" id="fd4"></div>
-  </div>
-
-  <div id="hint">Move your mouse · The hand tracks and grips</div>
+<div id="stage-panel">
+  <div class="stage-label">SI Stages</div>
+  <div class="stage-item" id="s1"><div class="stage-dot"></div><span>1 · Visual Acquisition</span></div>
+  <div class="stage-item" id="s2"><div class="stage-dot"></div><span>2 · Approach</span></div>
+  <div class="stage-item" id="s3"><div class="stage-dot"></div><span>3 · Pre-Shape</span></div>
+  <div class="stage-item" id="s4"><div class="stage-dot"></div><span>4 · Contact</span></div>
+  <div class="stage-item" id="s5"><div class="stage-dot"></div><span>5 · Grip & Hold</span></div>
 </div>
 
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
+<div id="math">
+  <div class="math-card">
+    <h3>Min. Jerk — Flash & Hogan 1985</h3>
+    <div class="math-eq">x(t) = x₀ + Δx·(10τ³−15τ⁴+6τ⁵)</div>
+    <div class="math-vals">τ: <b id="m-tau">0.00</b> &nbsp; Progress: <b id="m-prog">0%</b></div>
+  </div>
+  <div class="math-card">
+    <h3>Santello PC1 Synergy 1998</h3>
+    <div class="math-eq">θᵢ = wᵢ × closure × π·0.68</div>
+    <div class="math-vals">Closure: <b id="m-cl">0%</b> &nbsp; PC1: <b id="m-pc">0.00</b></div>
+  </div>
+  <div class="math-card">
+    <h3>Aperture</h3>
+    <div class="math-eq">A = 1.2 × D_ball</div>
+    <div class="math-vals">Target: <b id="m-ap">0.000</b> m</div>
+  </div>
+  <div class="math-card">
+    <h3>Grip Force</h3>
+    <div class="math-eq">F = 1.8 × m × g</div>
+    <div class="math-vals">Force: <b id="m-f">0.0</b> N &nbsp; Contact: <b id="m-ct">0/5</b></div>
+  </div>
+</div>
 
-// ─── Scene ───────────────────────────────────────────────────────────────────
-const canvas = document.getElementById('app');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+<div id="force-bar"><div class="force-label">Grip Force</div><div class="force-track"><div class="force-fill" id="force-fill"></div></div></div>
+<div id="hint">Move mouse to position · Hold GRIP to grab</div>
+<button id="grip-btn">Hold to Grip</button>
+<div id="contacts">
+  <span class="contact-label">Fingers</span>
+  <div class="finger-dot" id="fd0"></div><div class="finger-dot" id="fd1"></div>
+  <div class="finger-dot" id="fd2"></div><div class="finger-dot" id="fd3"></div>
+  <div class="finger-dot" id="fd4"></div>
+</div>
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x080810);
-scene.fog = new THREE.FogExp2(0x080810, 0.08);
+<script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
+<script>
+(function(){
+  const canvas = document.getElementById('app');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 50);
-camera.position.set(0, 1.2, 3.5);
-camera.lookAt(0, 0.5, 0);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080810);
+  scene.fog = new THREE.FogExp2(0x080810, 0.055);
 
-// ─── Lights ──────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0x2233aa, 0.6));
+  const camera = new THREE.PerspectiveCamera(42, window.innerWidth/window.innerHeight, 0.01, 50);
+  camera.position.set(0, 1.8, 4.5);
+  camera.lookAt(0, 0.3, 0);
 
-const key = new THREE.DirectionalLight(0xffffff, 2.5);
-key.position.set(3, 6, 3);
-key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
-scene.add(key);
+  scene.add(new THREE.AmbientLight(0x1a2a44, 1.2));
+  const kl = new THREE.DirectionalLight(0xffffff, 3.2);
+  kl.position.set(2,6,4); kl.castShadow = true;
+  kl.shadow.mapSize.set(2048,2048);
+  scene.add(kl);
+  const fl = new THREE.PointLight(0x4488ff, 2.0, 12);
+  fl.position.set(-3,3,1); scene.add(fl);
+  const rl = new THREE.PointLight(0x00ffcc, 1.0, 8);
+  rl.position.set(2,1,-3); scene.add(rl);
 
-const fill = new THREE.PointLight(0x4466ff, 1.5, 8);
-fill.position.set(-2, 1, -1);
-scene.add(fill);
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(14,14),
+    new THREE.MeshStandardMaterial({ color: 0x08080f, roughness: 0.95 })
+  );
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
+  scene.add(floor);
+  scene.add(new THREE.GridHelper(14, 28, 0x0c1828, 0x09111f));
 
-const rim = new THREE.PointLight(0x00ffaa, 0.8, 6);
-rim.position.set(1, 0.5, -2);
-scene.add(rim);
-
-// ─── Floor ───────────────────────────────────────────────────────────────────
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(12, 12),
-  new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.95, metalness: 0.1 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// subtle grid
-const grid = new THREE.GridHelper(12, 24, 0x112233, 0x0d1522);
-grid.position.y = 0.001;
-scene.add(grid);
-
-// ─── Ball ────────────────────────────────────────────────────────────────────
-const BALL_RADIUS = 0.12;
-const ballGeo = new THREE.SphereGeometry(BALL_RADIUS, 32, 32);
-const ballMat = new THREE.MeshStandardMaterial({
-  color: 0xf39c12,
-  roughness: 0.5,
-  metalness: 0.15,
-  emissive: 0x221100,
-  emissiveIntensity: 0.2
-});
-const ballMesh = new THREE.Mesh(ballGeo, ballMat);
-ballMesh.castShadow = true;
-ballMesh.position.set(0.6, 0.3, 0);
-scene.add(ballMesh);
-
-// glow ring under ball
-const glowGeo = new THREE.RingGeometry(0.05, 0.18, 32);
-const glowMat = new THREE.MeshBasicMaterial({
-  color: 0xf39c12,
-  transparent: true,
-  opacity: 0.12,
-  side: THREE.DoubleSide
-});
-const glowRing = new THREE.Mesh(glowGeo, glowMat);
-glowRing.rotation.x = -Math.PI / 2;
-glowRing.position.y = 0.002;
-scene.add(glowRing);
-
-// ─── Hand Group ──────────────────────────────────────────────────────────────
-const handGroup = new THREE.Group();
-handGroup.position.set(-0.5, 0.3, 0);
-scene.add(handGroup);
-
-const skinColor = 0x2c3e50;
-const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.4, metalness: 0.6 });
-const tipMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.9, metalness: 0.05 });
-const palmMat = new THREE.MeshStandardMaterial({ color: 0x243040, roughness: 0.3, metalness: 0.7 });
-
-// Palm
-const palm = new THREE.Mesh(
-  new THREE.BoxGeometry(0.14, 0.04, 0.16),
-  palmMat
-);
-palm.castShadow = true;
-handGroup.add(palm);
-
-// ─── 5 Fingers ───────────────────────────────────────────────────────────────
-// Santello (1998) synergy weights for PC1 (whole-hand closure)
-const PC1_WEIGHTS = [0.6, 0.7, 0.8, 0.8, 0.7]; // thumb, index, middle, ring, pinky
-
-// Finger base positions on palm (x offset, z offset)
-const FINGER_POSITIONS = [
-  [-0.10,  0.04],  // thumb
-  [-0.055, 0.09],  // index
-  [-0.015, 0.095], // middle
-  [ 0.025, 0.085], // ring
-  [ 0.065, 0.07],  // pinky
-];
-
-// Finger spread angles (pointing direction)
-const FINGER_ANGLES = [
-  -Math.PI * 0.38, // thumb (angled inward)
-  -Math.PI * 0.12,
-  0,
-  Math.PI * 0.10,
-  Math.PI * 0.18,
-];
-
-// Finger segment lengths
-const FINGER_LENGTHS = [
-  [0.032, 0.028, 0.022], // thumb (shorter, 3 segments)
-  [0.038, 0.030, 0.024],
-  [0.040, 0.032, 0.026],
-  [0.036, 0.028, 0.022],
-  [0.028, 0.022, 0.018],
-];
-
-const fingers = [];
-
-for (let f = 0; f < 5; f++) {
-  const fingerGroup = {
-    segments: [],
-    joints: [],
-    angle: FINGER_ANGLES[f],
-    pc1Weight: PC1_WEIGHTS[f],
-    currentCurl: 0
-  };
-
-  const [px, pz] = FINGER_POSITIONS[f];
-  let prevGroup = handGroup;
-  let offsetY = 0.02;
-  let offsetX = px;
-  let offsetZ = pz;
-
-  const segs = FINGER_LENGTHS[f];
-
-  for (let s = 0; s < segs.length; s++) {
-    const segLen = segs[s];
-    const joint = new THREE.Group();
-    joint.position.set(offsetX, offsetY, offsetZ);
-
-    // Initial angle offset for thumb
-    if (f === 0 && s === 0) {
-      joint.rotation.z = Math.PI * 0.2;
-    }
-
-    prevGroup.add(joint);
-
-    const seg = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.009 - s * 0.002, 0.011 - s * 0.002, segLen, 8),
-      s === segs.length - 1 ? tipMat : skinMat
-    );
-    seg.position.y = segLen / 2;
-    seg.castShadow = true;
-    joint.add(seg);
-
-    fingerGroup.segments.push(seg);
-    fingerGroup.joints.push(joint);
-
-    // next segment starts at end of this one
-    offsetX = 0;
-    offsetZ = 0;
-    offsetY = segLen;
-    prevGroup = joint;
-  }
-
-  fingers.push(fingerGroup);
-}
-
-// ─── Mouse → 3D plane projection ─────────────────────────────────────────────
-const mouse = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
-const ballPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-const mouseWorld = new THREE.Vector3();
-
-window.addEventListener('mousemove', e => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-});
-
-// ─── SI Stage System ─────────────────────────────────────────────────────────
-const STAGES = ['ACQUIRE', 'APPROACH', 'PRESHAPE', 'CONTACT', 'GRIP'];
-let currentStage = 0;
-let stageTimer = 0;
-
-const stageEls = [
-  document.getElementById('s1'),
-  document.getElementById('s2'),
-  document.getElementById('s3'),
-  document.getElementById('s4'),
-  document.getElementById('s5'),
-];
-
-function updateStageUI(stage) {
-  stageEls.forEach((el, i) => {
-    el.classList.remove('active', 'complete');
-    if (i < stage) el.classList.add('complete');
-    if (i === stage) el.classList.add('active');
+  const BALL_R = 0.15;
+  const ballMat = new THREE.MeshStandardMaterial({
+    color: 0xf39c12, roughness: 0.4, metalness: 0.2,
+    emissive: 0x331100, emissiveIntensity: 0.3
   });
-}
+  const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(BALL_R,32,32), ballMat);
+  ballMesh.castShadow = true; scene.add(ballMesh);
 
-// ─── Finger contact dots ──────────────────────────────────────────────────────
-const fingerDots = [0,1,2,3,4].map(i => document.getElementById(`fd${i}`));
+  const glowRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.05,0.25,32),
+    new THREE.MeshBasicMaterial({ color:0xf39c12, transparent:true, opacity:0.08, side:THREE.DoubleSide })
+  );
+  glowRing.rotation.x = -Math.PI/2; glowRing.position.y = 0.003;
+  scene.add(glowRing);
 
-// ─── Animation State ─────────────────────────────────────────────────────────
-let aperture = 0;
-let targetAperture = 0;
-let closure = 0;
-let targetClosure = 0;
-let gripping = false;
-let gripForce = 0;
-let contactCount = 0;
-const fingerContacts = [false, false, false, false, false];
+  const handGroup = new THREE.Group();
+  scene.add(handGroup);
 
-const handTarget = new THREE.Vector3(-0.5, 0.3, 0);
-const handVelocity = new THREE.Vector3();
+  const mPalm = new THREE.MeshStandardMaterial({ color:0x1a2b3c, roughness:0.25, metalness:0.85 });
+  const mFing = new THREE.MeshStandardMaterial({ color:0x243444, roughness:0.30, metalness:0.75 });
+  const mMid  = new THREE.MeshStandardMaterial({ color:0x2d4055, roughness:0.35, metalness:0.65 });
+  const mTip  = new THREE.MeshStandardMaterial({ color:0xc0392b, roughness:0.85, metalness:0.05 });
 
-const ballTarget = new THREE.Vector3(0.6, 0.3, 0);
-const ballPos = ballMesh.position.clone();
+  const palm = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.04,0.18), mPalm);
+  palm.castShadow = true; handGroup.add(palm);
+  const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.065,0.14,12), mPalm);
+  wrist.position.set(0,0.09,-0.05); handGroup.add(wrist);
 
-// ─── Main Loop ───────────────────────────────────────────────────────────────
-const clock = new THREE.Clock();
+  const PC1_W = [0.60, 0.70, 0.80, 0.80, 0.70];
+  const FDATA = [
+    { px:-0.11,  pz:-0.03, sy:-0.50, segs:[0.032,0.026,0.020] },
+    { px:-0.058, pz: 0.07, sy:-0.12, segs:[0.040,0.031,0.024] },
+    { px:-0.013, pz: 0.075,sy: 0.00, segs:[0.044,0.035,0.027] },
+    { px: 0.033, pz: 0.070,sy: 0.12, segs:[0.039,0.030,0.023] },
+    { px: 0.075, pz: 0.060,sy: 0.23, segs:[0.029,0.022,0.017] },
+  ];
 
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const t = clock.elapsedTime;
-
-  // Project mouse to world plane
-  raycaster.setFromCamera(mouse, camera);
-  raycaster.ray.intersectPlane(ballPlane, mouseWorld);
-  mouseWorld.x = THREE.MathUtils.clamp(mouseWorld.x, -1.8, 1.8);
-  mouseWorld.y = THREE.MathUtils.clamp(mouseWorld.y, 0.05, 1.6);
-  mouseWorld.z = 0;
-
-  // Ball follows mouse smoothly
-  ballTarget.copy(mouseWorld);
-  ballPos.lerp(ballTarget, 1 - Math.pow(0.01, dt));
-  ballMesh.position.copy(ballPos);
-  glowRing.position.x = ballPos.x;
-  glowRing.position.z = ballPos.z;
-
-  // Ball subtle hover bob
-  ballMesh.position.y = ballPos.y + Math.sin(t * 1.8) * 0.008;
-
-  // Distance from hand to ball
-  const handPos = handGroup.position;
-  const dist = handPos.distanceTo(ballPos);
-  const maxDist = 3.0;
-
-  // ── SI Stage Logic ────────────────────────────────────────────────────────
-  stageTimer += dt;
-
-  if (dist > 0.5) {
-    // Far: Acquire + Approach
-    currentStage = dist > 1.0 ? 0 : 1;
-    targetAperture = 1.2 * BALL_RADIUS * 2; // Santello: A = 1.2 × diameter
-    targetClosure = 0;
-    gripping = false;
-  } else if (dist > 0.22) {
-    // Medium: Pre-shape
-    currentStage = 2;
-    const t_pre = (0.5 - dist) / 0.28;
-    targetAperture = 1.2 * BALL_RADIUS * 2 * (0.8 + 0.2 * t_pre);
-    targetClosure = t_pre * 0.3;
-    gripping = false;
-  } else if (dist > 0.14) {
-    // Close: Contact
-    currentStage = 3;
-    targetClosure = 0.6;
-    gripping = false;
-  } else {
-    // Very close: Grip
-    currentStage = 4;
-    targetClosure = 1.0;
-    gripping = true;
+  const fingers = [];
+  for (let f = 0; f < 5; f++) {
+    const fd = FDATA[f];
+    const finger = { joints:[], pc1:PC1_W[f], isThumb: f===0 };
+    let parent = handGroup;
+    let pos = new THREE.Vector3(fd.px, -0.022, fd.pz);
+    for (let s = 0; s < fd.segs.length; s++) {
+      const slen = fd.segs[s];
+      const joint = new THREE.Group();
+      joint.position.copy(pos);
+      if (s === 0) {
+        joint.rotation.y = fd.sy;
+        if (f === 0) joint.rotation.z = -Math.PI * 0.28;
+      }
+      parent.add(joint);
+      const r0 = 0.013 - s*0.002, r1 = 0.011 - s*0.002;
+      const seg = new THREE.Mesh(
+        new THREE.CylinderGeometry(r0,r1,slen,8),
+        s===2 ? mTip : (s===0 ? mFing : mMid)
+      );
+      seg.position.y = -slen/2; seg.castShadow = true;
+      joint.add(seg);
+      finger.joints.push(joint);
+      parent = joint;
+      pos = new THREE.Vector3(0,-slen,0);
+    }
+    fingers.push(finger);
   }
 
-  updateStageUI(currentStage);
+  let mx = 0, my = 0, gripping = false;
+  canvas.addEventListener('mousemove', e => {
+    mx = (e.clientX/window.innerWidth)*2 - 1;
+    my = -(e.clientY/window.innerHeight)*2 + 1;
+  });
 
-  // Smooth aperture and closure
-  aperture += (targetAperture - aperture) * (1 - Math.pow(0.001, dt));
-  closure += (targetClosure - closure) * (1 - Math.pow(0.001, dt));
+  const btn = document.getElementById('grip-btn');
+  const startGrip = () => { gripping=true;  btn.classList.add('on');    btn.textContent='Release'; };
+  const stopGrip  = () => { gripping=false; btn.classList.remove('on'); btn.textContent='Hold to Grip'; };
+  btn.addEventListener('mousedown',  startGrip);
+  btn.addEventListener('mouseup',    stopGrip);
+  btn.addEventListener('mouseleave', stopGrip);
+  btn.addEventListener('touchstart', e => { e.preventDefault(); startGrip(); });
+  btn.addEventListener('touchend',   e => { e.preventDefault(); stopGrip();  });
 
-  // ── Hand approaches ball ─────────────────────────────────────────────────
-  // Approach velocity: v = 0.1 × (dist / maxDist)
-  const speed = 0.1 + 2.5 * (dist / maxDist);
-  const direction = ballPos.clone().sub(handPos).normalize();
-  
-  // Offset so hand doesn't overlap ball center
-  const targetPos = ballPos.clone().sub(direction.clone().multiplyScalar(0.18));
-  
-  handGroup.position.lerp(targetPos, 1 - Math.pow(0.001 / speed, dt));
+  const raycaster  = new THREE.Raycaster();
+  const hitPlane   = new THREE.Plane(new THREE.Vector3(0,1,0), -0.22);
+  const mouseWorld = new THREE.Vector3();
+  const stageEls   = [1,2,3,4,5].map(i=>document.getElementById('s'+i));
+  const fdots      = [0,1,2,3,4].map(i=>document.getElementById('fd'+i));
+  const hintEl     = document.getElementById('hint');
 
-  // Hand looks toward ball
-  const lookTarget = ballPos.clone();
-  handGroup.lookAt(lookTarget);
-  handGroup.rotateX(-Math.PI / 2);
+  function updateStageUI(s) {
+    stageEls.forEach((el,i) => {
+      el.classList.toggle('active', i===s);
+      el.classList.toggle('complete', i<s);
+    });
+  }
 
-  // ── Finger animation (Santello synergies) ─────────────────────────────────
-  contactCount = 0;
-  for (let f = 0; f < 5; f++) {
-    const finger = fingers[f];
+  // Min-jerk trajectory: x(t) = x0 + dx*(10τ³ - 15τ⁴ + 6τ⁵)
+  function minJerk(tau) {
+    const t = Math.max(0, Math.min(1, tau));
+    return 10*t*t*t - 15*t*t*t*t + 6*t*t*t*t*t;
+  }
 
-    // PC1: whole-hand closure
-    // θ_i = w_i × PC1_weight × closure
-    const curlAngle = finger.pc1Weight * closure * (Math.PI * 0.55);
+  const ballPos = new THREE.Vector3(0, 0.22, 0.2);
+  const handPos = new THREE.Vector3(0, 1.5, 0.2);
+  const handXZ  = new THREE.Vector2(0, 0.2);
 
-    // Thumb curls differently (rotates to oppose)
-    const isThumb = f === 0;
-    const segCount = finger.joints.length;
+  let descentStart = null, descentTime = 0;
+  const DESCENT_DURATION = 0.85;
+  let closure = 0, targetClosure = 0, currentStage = 0;
+  let tau = 0, ballHeld = false;
+  const ballOffset = new THREE.Vector3();
+  const clock = new THREE.Clock();
 
-    for (let s = 0; s < segCount; s++) {
-      const joint = finger.joints[s];
-      // Proximal joint curls more, distal joints follow proportionally
-      const segFactor = isThumb ? [0.6, 0.8, 0.6][s] : [0.5, 0.7, 0.9][s];
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t  = clock.elapsedTime;
 
-      if (isThumb) {
-        joint.rotation.z = (s === 0 ? Math.PI * 0.2 : 0) + curlAngle * segFactor;
-      } else {
-        joint.rotation.x = curlAngle * segFactor;
+    raycaster.setFromCamera({x:mx,y:my}, camera);
+    raycaster.ray.intersectPlane(hitPlane, mouseWorld);
+    mouseWorld.x = THREE.MathUtils.clamp(mouseWorld.x, -2.0, 2.0);
+    mouseWorld.z = THREE.MathUtils.clamp(mouseWorld.z, -1.2, 1.2);
+
+    if (ballHeld) {
+      ballPos.lerp(handPos.clone().add(ballOffset), 1-Math.pow(0.001,dt));
+    } else {
+      const bt = new THREE.Vector3(mouseWorld.x, 0.22+Math.sin(t*1.4)*0.009, mouseWorld.z);
+      ballPos.lerp(bt, 1-Math.pow(0.004,dt));
+    }
+    ballMesh.position.copy(ballPos);
+    glowRing.position.x = ballPos.x;
+    glowRing.position.z = ballPos.z;
+
+    handXZ.x += (ballPos.x - handXZ.x) * (1-Math.pow(0.005,dt));
+    handXZ.y += (ballPos.z - handXZ.y) * (1-Math.pow(0.005,dt));
+
+    const HOVER_H = ballPos.y + 0.62;
+    const GRIP_H  = ballPos.y + BALL_R + 0.065;
+
+    if (!gripping) {
+      descentStart = null; descentTime = 0; tau = 0;
+      ballHeld = false;
+      handPos.y += (HOVER_H - handPos.y) * (1-Math.pow(0.005,dt));
+      const vd = handPos.y - ballPos.y;
+      currentStage = vd > 0.5 ? 0 : vd > 0.35 ? 1 : 2;
+      targetClosure = 0;
+    } else {
+      if (descentStart === null) { descentStart = handPos.y; descentTime = 0; }
+      descentTime += dt;
+      tau = Math.min(1.0, descentTime / DESCENT_DURATION);
+      const jerkProg = minJerk(tau);
+      handPos.y = descentStart + (GRIP_H - descentStart) * jerkProg;
+
+      if (tau < 0.15)      { currentStage = 1; targetClosure = 0; }
+      else if (tau < 0.45) { currentStage = 2; targetClosure = THREE.MathUtils.mapLinear(tau,0.15,0.45,0,0.30); }
+      else if (tau < 0.72) { currentStage = 3; targetClosure = THREE.MathUtils.mapLinear(tau,0.45,0.72,0.30,0.72); }
+      else {
+        currentStage = 4;
+        targetClosure = THREE.MathUtils.mapLinear(tau,0.72,1.0,0.72,1.0);
+        if (!ballHeld && tau > 0.90) { ballHeld=true; ballOffset.copy(ballPos).sub(handPos); }
       }
     }
 
-    // Contact detection: fingertip near ball
-    const tipJoint = finger.joints[segCount - 1];
-    const tipWorld = new THREE.Vector3();
-    tipJoint.getWorldPosition(tipWorld);
-    const tipDist = tipWorld.distanceTo(ballPos);
-    const inContact = tipDist < BALL_RADIUS + 0.025;
+    closure += (targetClosure - closure) * (1-Math.pow(0.002,dt));
+    updateStageUI(currentStage);
 
-    finger.inContact = inContact;
-    fingerContacts[f] = inContact;
-    if (inContact) contactCount++;
+    handPos.x = handXZ.x;
+    handPos.z = handXZ.y;
+    handGroup.position.copy(handPos);
+    handGroup.rotation.set(0,0,0);
 
-    // Update finger dot UI
-    fingerDots[f].classList.toggle('contact', inContact);
+    let contactCount = 0;
+    for (let f = 0; f < 5; f++) {
+      const finger = fingers[f];
+      const curlRad = finger.pc1 * closure * Math.PI * 0.68;
+      for (let s = 0; s < finger.joints.length; s++) {
+        const joint = finger.joints[s];
+        const sf = finger.isThumb ? [0.35,0.62,0.80][s] : [0.28,0.52,1.00][s];
+        if (finger.isThumb) {
+          if (s===0) { joint.rotation.z=-Math.PI*0.28-curlRad*0.42; joint.rotation.x=curlRad*0.22; }
+          else       { joint.rotation.x=curlRad*sf; }
+        } else {
+          joint.rotation.x = curlRad*sf;
+        }
+      }
+      const tipJoint = finger.joints[2];
+      const tp = new THREE.Vector3();
+      tipJoint.getWorldPosition(tp);
+      tp.y -= FDATA[f].segs[2]*0.6;
+      const ic = currentStage>=3 && tp.distanceTo(ballMesh.position)<BALL_R+0.045;
+      if (ic) contactCount++;
+      fdots[f].classList.toggle('contact', ic);
+    }
+
+    const gf = currentStage===4 ? 1.8*0.2*9.81*closure : 0;
+    ballMesh.scale.setScalar(ballHeld ? (1-closure*0.045) : 1);
+    ballMat.emissiveIntensity = ballHeld ? (0.3+closure*0.8) : 0.3;
+
+    hintEl.textContent = gripping
+      ? (ballHeld ? 'Gripping · Release to drop'
+          : tau<0.45 ? 'Approaching...'
+          : tau<0.72 ? 'Pre-shaping fingers...'
+          : 'Closing grip...')
+      : 'Move mouse to position ball · Hold GRIP to grab';
+    hintEl.classList.toggle('on', gripping);
+
+    document.getElementById('m-tau').textContent  = tau.toFixed(2);
+    document.getElementById('m-prog').textContent = Math.round(minJerk(tau)*100)+'%';
+    document.getElementById('m-cl').textContent   = Math.round(closure*100)+'%';
+    document.getElementById('m-pc').textContent   = closure.toFixed(2);
+    document.getElementById('m-ap').textContent   = (1.2*BALL_R*2).toFixed(3);
+    document.getElementById('m-f').textContent    = gf.toFixed(1);
+    document.getElementById('m-ct').textContent   = contactCount+'/5';
+    document.getElementById('force-fill').style.width = Math.min(100,gf/3.5*100)+'%';
+
+    renderer.render(scene, camera);
   }
 
-  // Grip force: F = 1.8 × m × g (m ≈ 0.2kg ball)
-  gripForce = gripping ? 1.8 * 0.2 * 9.81 * (closure) : 0;
+  animate();
 
-  // ── Update math UI ────────────────────────────────────────────────────────
-  document.getElementById('m-aperture').textContent = targetAperture.toFixed(3);
-  document.getElementById('m-aperture-cur').textContent = aperture.toFixed(3);
-  document.getElementById('m-pc1').textContent = (closure).toFixed(2);
-  document.getElementById('m-closure').textContent = Math.round(closure * 100) + '%';
-  document.getElementById('m-dist').textContent = dist.toFixed(2);
-  document.getElementById('m-speed').textContent = (speed * 0.1).toFixed(2);
-  document.getElementById('m-force').textContent = gripForce.toFixed(1);
-  document.getElementById('m-contact').textContent = contactCount + ' / 5';
-  document.getElementById('force-fill').style.width = Math.min(100, gripForce / 3.5 * 100) + '%';
-
-  // Ball reacts when gripped — slight scale feedback
-  const grip01 = gripping ? Math.min(1, closure) : 0;
-  ballMesh.scale.setScalar(1 - grip01 * 0.04);
-  ballMat.emissiveIntensity = 0.2 + grip01 * 0.4;
-
-  renderer.render(scene, camera);
-}
-
-animate();
-
-// ─── Resize ──────────────────────────────────────────────────────────────────
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
 </script>
 </body>
 </html>
