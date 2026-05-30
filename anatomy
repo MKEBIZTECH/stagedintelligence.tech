@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robotic Hand Anatomy — Staged Intelligence Tech</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#06060f;color:#e8e8f0;font-family:'Space Mono',monospace;overflow:hidden;height:100vh;}
+    canvas{display:block;}
+
+    /* Top bar */
+    #topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(6,6,15,0.92);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:30;}
+    #topbar-left{display:flex;align-items:center;gap:16px;}
+    #back{font-size:10px;letter-spacing:0.15em;color:rgba(255,255,255,0.3);text-decoration:none;text-transform:uppercase;transition:color 0.2s;}
+    #back:hover{color:#fff;}
+    .divider{width:1px;height:20px;background:rgba(255,255,255,0.1);}
+    #page-title .brand{font-size:9px;letter-spacing:0.25em;color:rgba(68,170,255,0.6);text-transform:uppercase;}
+    #page-title .name{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);}
+
+    /* Camera angle buttons */
+    #cam-controls{display:flex;gap:6px;}
+    .cam-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:2px;cursor:pointer;font-family:'Space Mono',monospace;transition:all 0.2s;}
+    .cam-btn:hover{background:rgba(68,170,255,0.12);border-color:rgba(68,170,255,0.3);color:rgba(68,170,255,0.9);}
+    .cam-btn.active{background:rgba(68,170,255,0.15);border-color:rgba(68,170,255,0.4);color:#4af;}
+
+    /* Grip mode buttons */
+    #grip-modes{display:flex;gap:6px;}
+    .grip-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 10px;border-radius:2px;cursor:pointer;font-family:'Space Mono',monospace;transition:all 0.2s;}
+    .grip-btn:hover{background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.3);color:rgba(46,204,113,0.8);}
+    .grip-btn.active{background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.4);color:#2ecc71;}
+
+    /* Left panel — anatomy */
+    #left-panel{position:fixed;left:16px;top:68px;width:190px;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+    .panel-section{background:rgba(8,8,20,0.88);border:1px solid rgba(255,255,255,0.06);border-left:2px solid rgba(68,170,255,0.35);padding:10px 12px;}
+    .panel-title{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(68,170,255,0.6);margin-bottom:8px;}
+    .bone-list{display:flex;flex-direction:column;gap:3px;}
+    .bone-item{display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(255,255,255,0.3);transition:color 0.2s;}
+    .bone-item.active{color:#fff;}
+    .bone-dot{width:5px;height:5px;border-radius:1px;background:rgba(255,255,255,0.12);flex-shrink:0;}
+    .bone-item.active .bone-dot{background:#4af;}
+    .tendon-item{display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(255,255,255,0.25);margin-bottom:2px;}
+    .tendon-dot{width:5px;height:3px;border-radius:1px;flex-shrink:0;}
+    .tendon-flexor{background:rgba(231,76,60,0.7);}
+    .tendon-extensor{background:rgba(52,152,219,0.7);}
+    .nerve-item{display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(255,255,255,0.25);margin-bottom:2px;}
+    .nerve-dot{width:5px;height:2px;border-radius:1px;flex-shrink:0;}
+    .nerve-median{background:rgba(241,196,15,0.8);}
+    .nerve-ulnar{background:rgba(155,89,182,0.8);}
+    .nerve-radial{background:rgba(46,204,113,0.8);}
+
+    /* Right panel — math */
+    #right-panel{position:fixed;right:16px;top:68px;width:210px;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+    .math-card{background:rgba(8,8,20,0.88);border:1px solid rgba(255,255,255,0.06);border-left:2px solid rgba(68,170,255,0.35);padding:10px 12px;}
+    .math-title{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(68,170,255,0.6);margin-bottom:5px;}
+    .math-eq{font-size:10px;color:#f0c040;font-style:italic;margin-bottom:4px;line-height:1.4;}
+    .math-val{font-size:9px;color:rgba(255,255,255,0.35);line-height:1.7;}
+    .math-val b{color:#2ecc71;font-weight:700;}
+
+    /* Bottom info bar */
+    #bottom-bar{position:fixed;bottom:0;left:0;right:0;height:40px;background:rgba(6,6,15,0.92);border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;gap:32px;z-index:30;}
+    .bottom-stat{font-size:9px;letter-spacing:0.12em;color:rgba(255,255,255,0.2);text-transform:uppercase;}
+    .bottom-stat b{color:#4af;}
+
+    /* Hover tooltip */
+    #tooltip{position:fixed;background:rgba(8,8,24,0.95);border:1px solid rgba(68,170,255,0.3);padding:6px 10px;font-size:9px;letter-spacing:0.1em;color:#fff;pointer-events:none;z-index:50;display:none;text-transform:uppercase;}
+
+    /* Finger click buttons */
+    #finger-controls{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:30;}
+    .fing-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:5px 9px;border-radius:2px;cursor:pointer;font-family:'Space Mono',monospace;transition:all 0.2s;}
+    .fing-btn:hover,.fing-btn.active{background:rgba(231,76,60,0.15);border-color:rgba(231,76,60,0.4);color:rgba(231,76,60,0.9);}
+  </style>
+</head>
+<body>
+<canvas id="app"></canvas>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div id="topbar-left">
+    <a href="/" id="back">← Back</a>
+    <div class="divider"></div>
+    <div id="page-title">
+      <div class="brand">Staged Intelligence Tech</div>
+      <div class="name">Robotic Hand — Engineering Anatomy</div>
+    </div>
+  </div>
+  <div id="grip-modes">
+    <button class="grip-btn" id="gb-reset">Reset</button>
+    <button class="grip-btn" id="gb-palm">Palm Grip</button>
+    <button class="grip-btn" id="gb-tip">Fingertip Grip</button>
+    <button class="grip-btn" id="gb-pinch">Pinch</button>
+  </div>
+  <div id="cam-controls">
+    <button class="cam-btn active" id="cb-front">Front</button>
+    <button class="cam-btn" id="cb-side">Side</button>
+    <button class="cam-btn" id="cb-top">Top</button>
+    <button class="cam-btn" id="cb-palm">Palm</button>
+  </div>
+</div>
+
+<!-- Left panel -->
+<div id="left-panel">
+  <div class="panel-section">
+    <div class="panel-title">Bone Structure (29)</div>
+    <div class="bone-list">
+      <div class="bone-item" id="bi-carpal"><div class="bone-dot"></div>Carpals (8)</div>
+      <div class="bone-item" id="bi-meta"><div class="bone-dot"></div>Metacarpals (5)</div>
+      <div class="bone-item" id="bi-prox"><div class="bone-dot"></div>Proximal Phalanges (5)</div>
+      <div class="bone-item" id="bi-mid"><div class="bone-dot"></div>Middle Phalanges (4)</div>
+      <div class="bone-item" id="bi-dist"><div class="bone-dot"></div>Distal Phalanges (5)</div>
+    </div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title">Actuator Tendons</div>
+    <div class="tendon-item"><div class="tendon-dot tendon-flexor"></div>Flexor Digitorum</div>
+    <div class="tendon-item"><div class="tendon-dot tendon-flexor"></div>Flexor Pollicis</div>
+    <div class="tendon-item"><div class="tendon-dot tendon-extensor"></div>Extensor Digitorum</div>
+    <div class="tendon-item"><div class="tendon-dot tendon-extensor"></div>Extensor Pollicis</div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title">Sensor Nerves</div>
+    <div class="nerve-item"><div class="nerve-dot nerve-median"></div>Median (thumb–ring)</div>
+    <div class="nerve-item"><div class="nerve-dot nerve-ulnar"></div>Ulnar (ring–pinky)</div>
+    <div class="nerve-item"><div class="nerve-dot nerve-radial"></div>Radial (dorsum)</div>
+  </div>
+</div>
+
+<!-- Right panel — math -->
+<div id="right-panel">
+  <div class="math-card">
+    <div class="math-title">Min. Jerk (Flash & Hogan 1985)</div>
+    <div class="math-eq">θ(t) = θ₀ + Δθ·(10τ³−15τ⁴+6τ⁵)</div>
+    <div class="math-val">τ: <b id="mv-tau">0.00</b> &nbsp; Active: <b id="mv-active">—</b></div>
+  </div>
+  <div class="math-card">
+    <div class="math-title">Surface Contact (Hertz)</div>
+    <div class="math-eq">F = (4/3)E*√R·δ^(3/2)</div>
+    <div class="math-val">Contact pts: <b id="mv-cp">0</b> &nbsp; Force: <b id="mv-cf">0.0</b>N</div>
+  </div>
+  <div class="math-card">
+    <div class="math-title">Santello PC1 Synergy</div>
+    <div class="math-eq">θᵢ = wᵢ × PC1 × closure</div>
+    <div class="math-val">Closure: <b id="mv-cl">0%</b></div>
+  </div>
+  <div class="math-card">
+    <div class="math-title">Grip Type</div>
+    <div class="math-eq">μ·Fn ≥ Ft (no slip)</div>
+    <div class="math-val">Mode: <b id="mv-mode">Open</b><br>μ: <b id="mv-mu">0.00</b> &nbsp; Stable: <b id="mv-stable">—</b></div>
+  </div>
+</div>
+
+<!-- Finger controls -->
+<div id="finger-controls">
+  <button class="fing-btn" id="fb-thumb">Thumb</button>
+  <button class="fing-btn" id="fb-index">Index</button>
+  <button class="fing-btn" id="fb-middle">Middle</button>
+  <button class="fing-btn" id="fb-ring">Ring</button>
+  <button class="fing-btn" id="fb-pinky">Pinky</button>
+  <button class="fing-btn" id="fb-all">All</button>
+</div>
+
+<!-- Bottom bar -->
+<div id="bottom-bar">
+  <div class="bottom-stat">Joints: <b>27</b></div>
+  <div class="bottom-stat">DOF: <b>21</b></div>
+  <div class="bottom-stat">Actuators: <b id="bs-act">0</b> active</div>
+  <div class="bottom-stat">Angle: <b id="bs-cam">Front</b></div>
+  <div class="bottom-stat">Hover: <b id="bs-hover">—</b></div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
+<script>
+window.addEventListener('load', function(){
+const canvas = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x06060f);
+scene.fog = new THREE.FogExp2(0x06060f, 0.04);
+
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth/window.innerHeight, 0.01, 50);
+camera.position.set(0, 0.5, 3.5);
+camera.lookAt(0, 0.4, 0);
+
+// Lights
+scene.add(new THREE.AmbientLight(0x1a2244, 1.0));
+const kl = new THREE.DirectionalLight(0xffffff, 3.0);
+kl.position.set(2,5,3); kl.castShadow=true;
+kl.shadow.mapSize.set(2048,2048);
+scene.add(kl);
+scene.add(Object.assign(new THREE.PointLight(0x4488ff,2.0,15), {position:{x:-3,y:3,z:1}}));
+scene.add(Object.assign(new THREE.PointLight(0x00ffcc,1.0,10), {position:{x:2,y:1,z:-2}}));
+scene.add(Object.assign(new THREE.PointLight(0xff4444,0.6,8),  {position:{x:1,y:-1,z:2}}));
+
+// Floor/platform
+const platGeo = new THREE.BoxGeometry(3,0.02,2);
+const platMat = new THREE.MeshStandardMaterial({color:0x0a0a18,roughness:0.9,metalness:0.3});
+const platform = new THREE.Mesh(platGeo, platMat);
+platform.position.y = -0.35;
+platform.receiveShadow = true;
+scene.add(platform);
+scene.add(new THREE.GridHelper(4,20,0x0c1828,0x080f1a));
+
+//─── MATERIALS ────────────────────────────────────────────────────────────────
+const MAT = {
+  bone:      new THREE.MeshStandardMaterial({color:0xd0d8e8,roughness:0.3,metalness:0.6}),
+  palm:      new THREE.MeshStandardMaterial({color:0x1a2b3c,roughness:0.2,metalness:0.9}),
+  servo:     new THREE.MeshStandardMaterial({color:0x2a2a3a,roughness:0.15,metalness:0.95}),
+  servoRed:  new THREE.MeshStandardMaterial({color:0x8b1a1a,roughness:0.2,metalness:0.8}),
+  tendonFlex:new THREE.MeshStandardMaterial({color:0xe74c3c,roughness:0.5,metalness:0.1,emissive:0x330000,emissiveIntensity:0.3}),
+  tendonExt: new THREE.MeshStandardMaterial({color:0x3498db,roughness:0.5,metalness:0.1,emissive:0x001133,emissiveIntensity:0.3}),
+  nerve:     new THREE.MeshStandardMaterial({color:0xf1c40f,roughness:0.6,metalness:0.0,emissive:0x221100,emissiveIntensity:0.4}),
+  nerveU:    new THREE.MeshStandardMaterial({color:0x9b59b6,roughness:0.6,metalness:0.0,emissive:0x110022,emissiveIntensity:0.4}),
+  nerveR:    new THREE.MeshStandardMaterial({color:0x2ecc71,roughness:0.6,metalness:0.0,emissive:0x001100,emissiveIntensity:0.4}),
+  tipPad:    new THREE.MeshStandardMaterial({color:0xc0392b,roughness:0.9,metalness:0.0}),
+  joint:     new THREE.MeshStandardMaterial({color:0x3a4a5a,roughness:0.2,metalness:0.9}),
+  wire:      new THREE.MeshStandardMaterial({color:0x445566,roughness:0.4,metalness:0.7}),
+  ball:      new THREE.MeshStandardMaterial({color:0xf39c12,roughness:0.45,metalness:0.15,emissive:0x221100,emissiveIntensity:0.25}),
+  contact:   new THREE.MeshStandardMaterial({color:0x2ecc71,roughness:0.3,metalness:0.1,emissive:0x002200,emissiveIntensity:0.5,transparent:true,opacity:0.7}),
+};
+
+//─── HELPERS ──────────────────────────────────────────────────────────────────
+function cylinder(r0,r1,h,mat,segs=8){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r0,r1,h,segs),mat);
+  m.castShadow=true; return m;
+}
+function box(w,h,d,mat){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+  m.castShadow=true; return m;
+}
+function sphere(r,mat,segs=12){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(r,segs,segs),mat);
+  m.castShadow=true; return m;
+}
+function tube(from,to,r,mat){
+  const dir=new THREE.Vector3().subVectors(to,from);
+  const len=dir.length();
+  const m=cylinder(r,r,len,mat,6);
+  const mid=new THREE.Vector3().addVectors(from,to).multiplyScalar(0.5);
+  m.position.copy(mid);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  return m;
+}
+
+//─── HAND GROUP ───────────────────────────────────────────────────────────────
+const handGroup = new THREE.Group();
+handGroup.position.set(0,0.1,0);
+scene.add(handGroup);
+
+//─── PALM ─────────────────────────────────────────────────────────────────────
+const palmBody = box(0.28,0.05,0.22,MAT.palm);
+palmBody.userData={label:'Palm / Metacarpal Base',type:'bone'};
+handGroup.add(palmBody);
+
+// Wrist assembly with servo
+const wristGroup = new THREE.Group();
+wristGroup.position.set(0,-0.06,-0.08);
+handGroup.add(wristGroup);
+
+const wristBody = box(0.20,0.06,0.08,MAT.servo);
+wristBody.userData={label:'Wrist Servo Assembly',type:'servo'};
+wristGroup.add(wristBody);
+
+// Servo detail bolts
+[-0.07,0.07].forEach(x=>{
+  const bolt=cylinder(0.008,0.008,0.025,MAT.bone,6);
+  bolt.rotation.z=Math.PI/2; bolt.position.set(x,0.035,0);
+  wristGroup.add(bolt);
+});
+
+// Carpal blocks (simplified 8 carpals as 2 rows)
+const carpalPositions=[
+  [-0.07,0,-0.1],[-0.023,0,-0.11],[0.023,0,-0.11],[0.07,0,-0.1],
+  [-0.06,0,-0.15],[-0.02,0,-0.155],[0.02,0,-0.155],[0.06,0,-0.15]
+];
+carpalPositions.forEach((p,i)=>{
+  const c=box(0.038,0.03,0.038,MAT.bone);
+  c.position.set(...p);
+  c.userData={label:`Carpal bone ${i+1}`,type:'carpal'};
+  handGroup.add(c);
+});
+
+//─── FINGER DATA ──────────────────────────────────────────────────────────────
+// Santello PC1 weights
+const PC1_W=[0.60,0.70,0.80,0.80,0.70];
+// [palmX, spread angle, metacarpal length, seg lengths [prox,mid,dist]]
+const FCONF=[
+  {name:'Thumb', px:-0.115, pz:-0.04, spreadY:-0.45, meta:0.050, segs:[0.038,0.030,0.025], isThumb:true,  nerve:'median'},
+  {name:'Index', px:-0.068, pz: 0.08, spreadY:-0.08, meta:0.072, segs:[0.048,0.034,0.026], isThumb:false, nerve:'median'},
+  {name:'Middle',px:-0.015, pz: 0.085,spreadY: 0.00, meta:0.078, segs:[0.052,0.038,0.028], isThumb:false, nerve:'median'},
+  {name:'Ring',  px: 0.038, pz: 0.082,spreadY: 0.08, meta:0.072, segs:[0.047,0.033,0.025], isThumb:false, nerve:'ulnar'},
+  {name:'Pinky', px: 0.088, pz: 0.072,spreadY: 0.17, meta:0.055, segs:[0.034,0.025,0.019], isThumb:false, nerve:'ulnar'},
+];
+
+const fingers=[];
+const allJoints=[];
+const allTendons=[];
+const allTipMeshes=[];
+
+FCONF.forEach((fc,f)=>{
+  const finger={
+    name:fc.name, conf:fc, joints:[],
+    tipMesh:null, metaMesh:null,
+    closure:0, targetClosure:0,
+    tau:0, animTime:0, animating:false,
+    pc1:PC1_W[f], isThumb:fc.isThumb,
+  };
+
+  // Metacarpal bone
+  const metaGroup=new THREE.Group();
+  metaGroup.position.set(fc.px, 0.025, fc.pz-fc.meta/2);
+  if(fc.isThumb){ metaGroup.rotation.z=-0.3; metaGroup.position.x-=0.01; }
+  handGroup.add(metaGroup);
+
+  const metaBone=cylinder(0.012,0.010,fc.meta,MAT.bone);
+  metaBone.userData={label:`${fc.name} Metacarpal`,type:'metacarpal'};
+  metaGroup.add(metaBone);
+
+  // Knuckle servo
+  const knuckle=sphere(0.016,MAT.joint);
+  knuckle.position.y=fc.meta/2+0.002;
+  knuckle.userData={label:`${fc.name} MCP Joint (servo)`,type:'servo'};
+  metaGroup.add(knuckle);
+
+  finger.metaMesh=metaBone;
+
+  // Phalanges
+  let parent=metaGroup;
+  let localY=fc.meta/2+0.003;
+
+  const segNames=['Proximal Phalanx','Middle Phalanx','Distal Phalanx'];
+  const numSegs=fc.isThumb?2:3;
+
+  for(let s=0;s<numSegs;s++){
+    const slen=fc.segs[s];
+    const joint=new THREE.Group();
+    joint.position.set(0,localY,0);
+    if(s===0){ joint.rotation.y=fc.spreadY; }
+    parent.add(joint);
+
+    // Bone
+    const bone=cylinder(0.011-s*0.002, 0.009-s*0.002, slen, MAT.bone);
+    bone.position.y=slen/2;
+    bone.userData={label:`${fc.name} ${segNames[s]}`,type:'phalanx'};
+    joint.add(bone);
+
+    // Inter-phalangeal joint sphere
+    if(s<numSegs-1){
+      const jpSphere=sphere(0.013-s*0.002,MAT.joint);
+      jpSphere.position.y=slen+0.001;
+      jpSphere.userData={label:`${fc.name} IP Joint`,type:'servo'};
+      joint.add(jpSphere);
+    }
+
+    // Fingertip pad
+    if(s===numSegs-1){
+      const tipPad=sphere(0.013,MAT.tipPad,10);
+      tipPad.position.y=slen+0.004;
+      tipPad.userData={label:`${fc.name} Tactile Pad`,type:'sensor'};
+      joint.add(tipPad);
+      finger.tipMesh=tipPad;
+      allTipMeshes.push({mesh:tipPad,finger:f});
+    }
+
+    // Flexor tendon (runs along palm side)
+    const flexStart=new THREE.Vector3(0.006,0,0);
+    const flexEnd=new THREE.Vector3(0.006,slen,0);
+    const flexTendon=tube(flexStart,flexEnd,0.003,MAT.tendonFlex);
+    flexTendon.userData={label:`${fc.name} Flexor Tendon`,type:'tendon'};
+    joint.add(flexTendon);
+    allTendons.push(flexTendon);
+
+    // Extensor tendon (runs along back)
+    const extStart=new THREE.Vector3(-0.006,0,0);
+    const extEnd=new THREE.Vector3(-0.006,slen,0);
+    const extTendon=tube(extStart,extEnd,0.002,MAT.tendonExt);
+    extTendon.userData={label:`${fc.name} Extensor Tendon`,type:'tendon'};
+    joint.add(extTendon);
+    allTendons.push(extTendon);
+
+    // Nerve strand (median=yellow, ulnar=purple)
+    const nerveMat=fc.nerve==='median'?MAT.nerve:MAT.nerveU;
+    const nStart=new THREE.Vector3(0,0.004,0);
+    const nEnd=new THREE.Vector3(0,slen-0.004,0);
+    const nerveTube=tube(nStart,nEnd,0.0015,nerveMat);
+    nerveTube.userData={label:`${fc.name} ${fc.nerve} nerve`,type:'nerve'};
+    joint.add(nerveTube);
+
+    finger.joints.push(joint);
+    allJoints.push(joint);
+    parent=joint;
+    localY=slen+0.003;
+  }
+
+  // Radial nerve along dorsum of palm
+  if(f===0||f===1){
+    const rn=tube(
+      new THREE.Vector3(fc.px,0.03,fc.pz),
+      new THREE.Vector3(fc.px,0.03,fc.pz-0.06),
+      0.002, MAT.nerveR
+    );
+    rn.userData={label:'Radial nerve branch',type:'nerve'};
+    handGroup.add(rn);
+  }
+
+  fingers.push(finger);
+});
+
+//─── BALL OBJECT ──────────────────────────────────────────────────────────────
+const BALL_R=0.07;
+const ballMesh=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,32,32),MAT.ball);
+ballMesh.castShadow=true;
+ballMesh.position.set(0.3, 0.05, 0.1);
+ballMesh.userData={label:'Grip Object',type:'object'};
+scene.add(ballMesh);
+
+// Contact point markers (hidden until contact)
+const contactMarkers=[];
+for(let i=0;i<5;i++){
+  const cm=sphere(0.012,MAT.contact,8);
+  cm.visible=false;
+  scene.add(cm);
+  contactMarkers.push(cm);
+}
+
+//─── CAMERA POSITIONS ─────────────────────────────────────────────────────────
+const CAM_POSES={
+  front:  {pos:[0,0.4,3.2],  look:[0,0.15,0]},
+  side:   {pos:[3.2,0.4,0],  look:[0,0.15,0]},
+  top:    {pos:[0,3.5,0.1],  look:[0,0,0]},
+  palm:   {pos:[0,0.4,-3.0], look:[0,0.15,0]},
+};
+let currentCam='front';
+let camAnimStart=null, camAnimFrom=null, camAnimTo=null, camLookFrom=null, camLookTo=null;
+const CAM_ANIM_DUR=0.7;
+const camLookCurrent=new THREE.Vector3(0,0.15,0);
+
+function startCamAnim(key){
+  const pose=CAM_POSES[key];
+  camAnimStart=null;
+  camAnimFrom=camera.position.clone();
+  camAnimTo=new THREE.Vector3(...pose.pos);
+  camLookFrom=camLookCurrent.clone();
+  camLookTo=new THREE.Vector3(...pose.look);
+  currentCam=key;
+  document.getElementById('bs-cam').textContent=key.charAt(0).toUpperCase()+key.slice(1);
+  document.querySelectorAll('.cam-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cb-'+key).classList.add('active');
+}
+
+document.getElementById('cb-front').onclick=()=>startCamAnim('front');
+document.getElementById('cb-side').onclick=()=>startCamAnim('side');
+document.getElementById('cb-top').onclick=()=>startCamAnim('top');
+document.getElementById('cb-palm').onclick=()=>startCamAnim('palm');
+
+//─── MIN JERK ─────────────────────────────────────────────────────────────────
+function minJerk(tau){
+  const t=Math.max(0,Math.min(1,tau));
+  return 10*t*t*t-15*t*t*t*t+6*t*t*t*t*t;
+}
+
+//─── FINGER ANIMATION ─────────────────────────────────────────────────────────
+const ANIM_DUR=0.65;
+
+function flexFinger(f, targetClosure){
+  const finger=fingers[f];
+  finger.animStart=null;
+  finger.closureFrom=finger.closure;
+  finger.targetClosure=targetClosure;
+  finger.animating=true;
+  finger.animTime=0;
+  document.querySelectorAll('.fing-btn')[f].classList.toggle('active', targetClosure>0.05);
+}
+
+function flexAll(targetClosure){
+  fingers.forEach((_,f)=>flexFinger(f,targetClosure));
+}
+
+// Per-finger buttons
+['thumb','index','middle','ring','pinky'].forEach((name,f)=>{
+  document.getElementById('fb-'+name).addEventListener('click',()=>{
+    const isActive=fingers[f].targetClosure>0.05;
+    flexFinger(f, isActive?0:1);
+  });
+});
+document.getElementById('fb-all').addEventListener('click',()=>{
+  const anyActive=fingers.some(fi=>fi.targetClosure>0.05);
+  flexAll(anyActive?0:1);
+});
+
+//─── GRIP MODES ───────────────────────────────────────────────────────────────
+// Palm grip: all fingers close fully, palm faces up
+document.getElementById('gb-palm').addEventListener('click',()=>{
+  setGripMode('palm');
+});
+// Fingertip grip: all fingers curl to ~0.55
+document.getElementById('gb-tip').addEventListener('click',()=>{
+  setGripMode('tip');
+});
+// Pinch: thumb + index only
+document.getElementById('gb-pinch').addEventListener('click',()=>{
+  setGripMode('pinch');
+});
+document.getElementById('gb-reset').addEventListener('click',()=>{
+  setGripMode('reset');
+});
+
+let gripMode='open';
+function setGripMode(mode){
+  gripMode=mode;
+  document.querySelectorAll('.grip-btn').forEach(b=>b.classList.remove('active'));
+  if(mode==='palm'){
+    flexAll(1.0);
+    document.getElementById('gb-palm').classList.add('active');
+  } else if(mode==='tip'){
+    fingers.forEach((_,f)=>flexFinger(f,0.60));
+    document.getElementById('gb-tip').classList.add('active');
+  } else if(mode==='pinch'){
+    flexFinger(0,0.75); flexFinger(1,0.75);
+    flexFinger(2,0.1);  flexFinger(3,0.05); flexFinger(4,0.0);
+    document.getElementById('gb-pinch').classList.add('active');
+  } else {
+    flexAll(0);
+  }
+}
+
+//─── HOVER / RAYCASTING ───────────────────────────────────────────────────────
+const raycaster=new THREE.Raycaster();
+raycaster.params.Line={threshold:0.01};
+const mouse=new THREE.Vector2();
+const tooltip=document.getElementById('tooltip');
+let hoveredObj=null;
+
+canvas.addEventListener('mousemove',e=>{
+  mouse.x=(e.clientX/window.innerWidth)*2-1;
+  mouse.y=-(e.clientY/window.innerHeight)*2+1;
+  tooltip.style.left=(e.clientX+14)+'px';
+  tooltip.style.top=(e.clientY-10)+'px';
+});
+
+//─── SURFACE CONTACT MATH ─────────────────────────────────────────────────────
+// Hertz contact: F = (4/3)E*√R·δ^(3/2)
+// E* = reduced modulus, R = contact radius, δ = penetration
+const E_STAR=1e5; // Pa (compliant rubber-like pad)
+
+function computeContact(tipWorldPos, contactDepth){
+  const R=0.013; // tip pad radius
+  const delta=Math.max(0,contactDepth);
+  const F=(4/3)*E_STAR*Math.sqrt(R)*Math.pow(delta,1.5);
+  return {delta,F};
+}
+
+//─── MAIN LOOP ────────────────────────────────────────────────────────────────
+const clock=new THREE.Clock();
+let globalTau=0;
+let totalActiveActuators=0;
+let totalContactPts=0;
+let totalContactForce=0;
+let activeClosure=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  const t=clock.elapsedTime;
+
+  //── Camera animation ──────────────────────────────────────────────────────
+  if(camAnimTo){
+    if(camAnimStart===null) camAnimStart=t;
+    const elapsed=t-camAnimStart;
+    const tau=Math.min(1,elapsed/CAM_ANIM_DUR);
+    const jt=minJerk(tau);
+    camera.position.lerpVectors(camAnimFrom,camAnimTo,jt);
+    camLookCurrent.lerpVectors(camLookFrom,camLookTo,jt);
+    camera.lookAt(camLookCurrent);
+    if(tau>=1) camAnimTo=null;
+  }
+
+  //── Finger animation ──────────────────────────────────────────────────────
+  totalActiveActuators=0;
+  globalTau=0;
+  activeClosure=0;
+
+  fingers.forEach((finger,f)=>{
+    if(finger.animating){
+      if(finger.animStart===null) finger.animStart=t;
+      const elapsed=t-finger.animStart;
+      finger.animTime=elapsed;
+      finger.tau=Math.min(1,elapsed/ANIM_DUR);
+      const jt=minJerk(finger.tau);
+      finger.closure=finger.closureFrom+(finger.targetClosure-finger.closureFrom)*jt;
+      if(finger.tau>=1){ finger.animating=false; finger.closure=finger.targetClosure; }
+    }
+
+    if(finger.closure>0.02) totalActiveActuators++;
+    globalTau=Math.max(globalTau,finger.tau||0);
+    activeClosure=Math.max(activeClosure,finger.closure);
+
+    // Apply joint rotations — Santello PC1 synergy
+    const curlRad=finger.pc1*finger.closure*Math.PI*0.72;
+
+    finger.joints.forEach((joint,s)=>{
+      const numSegs=finger.isThumb?2:3;
+      const sf=finger.isThumb?[0.40,0.70,0.85][s]:[0.28,0.55,1.00][s];
+      if(finger.isThumb){
+        if(s===0){
+          joint.rotation.z=-0.3-curlRad*0.45;
+          joint.rotation.x=curlRad*0.25;
+        } else {
+          joint.rotation.x=curlRad*sf;
+        }
+      } else {
+        joint.rotation.x=curlRad*sf;
+      }
+    });
+  });
+
+  //── Ball hover bob ─────────────────────────────────────────────────────────
+  ballMesh.position.y=0.05+Math.sin(t*1.3)*0.008;
+
+  //── Contact detection ──────────────────────────────────────────────────────
+  totalContactPts=0;
+  totalContactForce=0;
+
+  fingers.forEach((finger,f)=>{
+    const tipJoint=finger.joints[finger.joints.length-1];
+    const tipPos=new THREE.Vector3();
+    tipJoint.getWorldPosition(tipPos);
+    // Add segment length in local +Y
+    const tipEnd=new THREE.Vector3(0,finger.conf.segs[finger.conf.segs.length-1]+0.013,0);
+    tipEnd.applyQuaternion(tipJoint.getWorldQuaternion(new THREE.Quaternion()));
+    tipPos.add(tipEnd);
+
+    const distToBall=tipPos.distanceTo(ballMesh.position);
+    const penetration=BALL_R+0.013-distToBall;
+    const inContact=penetration>0;
+
+    contactMarkers[f].visible=inContact;
+    if(inContact){
+      // Place contact marker on ball surface toward tip
+      const dir=tipPos.clone().sub(ballMesh.position).normalize();
+      contactMarkers[f].position.copy(ballMesh.position.clone().add(dir.multiplyScalar(BALL_R)));
+      const {F}=computeContact(tipPos,penetration);
+      totalContactPts++;
+      totalContactForce+=F;
+    }
+  });
+
+  //── Grip friction stability check ─────────────────────────────────────────
+  const mu=totalContactPts>0?0.45+totalContactPts*0.06:0;
+  const fn=totalContactForce;
+  const ft=0.2*9.81; // ball weight tangential
+  const stable=fn>0&&mu*fn>=ft;
+
+  //── Grip mode display ─────────────────────────────────────────────────────
+  let modeStr='Open';
+  if(gripMode==='palm') modeStr='Palm Power Grip';
+  else if(gripMode==='tip') modeStr='Fingertip Precision';
+  else if(gripMode==='pinch') modeStr='Pinch Grip';
+  else if(activeClosure>0.05) modeStr='Custom';
+
+  //── Raycasting for hover ──────────────────────────────────────────────────
+  raycaster.setFromCamera(mouse,camera);
+  const allObjs=[];
+  scene.traverse(obj=>{ if(obj.isMesh&&obj.userData.label) allObjs.push(obj); });
+  const hits=raycaster.intersectObjects(allObjs,false);
+  if(hits.length>0){
+    const obj=hits[0].object;
+    hoveredObj=obj;
+    tooltip.style.display='block';
+    tooltip.textContent=obj.userData.label;
+    document.getElementById('bs-hover').textContent=obj.userData.label;
+    // Highlight bone items
+    const type=obj.userData.type;
+    ['carpal','metacarpal','phalanx'].forEach(tp=>{
+      const ids={carpal:'bi-carpal',metacarpal:'bi-meta'};
+      if(tp==='phalanx'){
+        const lbl=obj.userData.label||'';
+        if(lbl.includes('Proximal')) document.getElementById('bi-prox').classList.add('active');
+        else if(lbl.includes('Middle')) document.getElementById('bi-mid').classList.add('active');
+        else if(lbl.includes('Distal')) document.getElementById('bi-dist').classList.add('active');
+      }
+      if(ids[tp]) document.getElementById(ids[tp])?.classList.add('active');
+    });
+    if(type==='metacarpal') document.getElementById('bi-meta').classList.add('active');
+  } else {
+    hoveredObj=null;
+    tooltip.style.display='none';
+    document.getElementById('bs-hover').textContent='—';
+    ['bi-carpal','bi-meta','bi-prox','bi-mid','bi-dist'].forEach(id=>{
+      document.getElementById(id).classList.remove('active');
+    });
+  }
+
+  //── Update HUD ────────────────────────────────────────────────────────────
+  document.getElementById('mv-tau').textContent=globalTau.toFixed(2);
+  document.getElementById('mv-active').textContent=totalActiveActuators>0?`${totalActiveActuators} finger(s)`:'—';
+  document.getElementById('mv-cp').textContent=totalContactPts;
+  document.getElementById('mv-cf').textContent=totalContactForce.toFixed(1);
+  document.getElementById('mv-cl').textContent=Math.round(activeClosure*100)+'%';
+  document.getElementById('mv-mode').textContent=modeStr;
+  document.getElementById('mv-mu').textContent=mu.toFixed(2);
+  document.getElementById('mv-stable').textContent=totalContactPts>0?(stable?'Yes':'No'):'—';
+  document.getElementById('bs-act').textContent=totalActiveActuators;
+
+  // Ball emissive reacts to grip
+  MAT.ball.emissiveIntensity=0.25+totalContactPts*0.12;
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+});
+</script>
+</body>
+</html>
