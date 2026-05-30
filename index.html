@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staged Intelligence Tech</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080810;
+      --surface: #0e0e1a;
+      --border: rgba(255,255,255,0.07);
+      --accent: #4af;
+      --accent2: #a4f;
+      --text: #e8e8f0;
+      --muted: #555570;
+      --live: #2ecc71;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(68,170,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(68,170,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 32px 120px;
+    }
+
+    header {
+      margin-bottom: 80px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.1s;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.2s;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 540px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.3s;
+    }
+
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: var(--border);
+      margin: 60px 0;
+      opacity: 0;
+      animation: fadeUp 0.4s ease forwards 0.4s;
+    }
+
+    .nav-grid {
+      display: grid;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+      opacity: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transition: transform 0.2s ease;
+    }
+
+    .nav-item:hover::before {
+      transform: scaleY(1);
+    }
+
+    .nav-item:hover {
+      border-color: rgba(68,170,255,0.3);
+      background: rgba(68,170,255,0.04);
+      transform: translateX(4px);
+    }
+
+    .nav-item.coming-soon {
+      opacity: 0;
+      cursor: default;
+    }
+
+    .nav-item.coming-soon::before {
+      background: var(--muted);
+    }
+
+    .nav-item.coming-soon:hover {
+      border-color: var(--border);
+      background: var(--surface);
+      transform: none;
+    }
+
+    .nav-item.live::before {
+      background: var(--live);
+    }
+
+    .nav-item.live:hover {
+      border-color: rgba(46,204,113,0.3);
+      background: rgba(46,204,113,0.04);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+
+    .nav-index {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      min-width: 24px;
+    }
+
+    .nav-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .nav-coming-soon .nav-title {
+      color: var(--muted);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tag {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+
+    .tag-live {
+      background: rgba(46,204,113,0.12);
+      color: var(--live);
+      border: 1px solid rgba(46,204,113,0.2);
+    }
+
+    .tag-soon {
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .arrow {
+      font-size: 18px;
+      color: var(--muted);
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .nav-item:hover .arrow {
+      color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    .nav-item.coming-soon .arrow {
+      opacity: 0.2;
+    }
+
+    /* staggered animation */
+    .nav-item:nth-child(1) { animation: fadeUp 0.5s ease forwards 0.5s; }
+    .nav-item:nth-child(2) { animation: fadeUp 0.5s ease forwards 0.6s; }
+    .nav-item:nth-child(3) { animation: fadeUp 0.5s ease forwards 0.65s; }
+    .nav-item:nth-child(4) { animation: fadeUp 0.5s ease forwards 0.7s; }
+    .nav-item:nth-child(5) { animation: fadeUp 0.5s ease forwards 0.75s; }
+    .nav-item:nth-child(6) { animation: fadeUp 0.5s ease forwards 0.8s; }
+    .nav-item:nth-child(7) { animation: fadeUp 0.5s ease forwards 0.85s; }
+
+    footer {
+      margin-top: 80px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 0.4s ease forwards 1s;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* fix coming-soon opacity after animation */
+    .nav-item.coming-soon {
+      animation-fill-mode: forwards;
+    }
+    .nav-item.coming-soon.animated {
+      opacity: 0.45 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <p class="eyebrow">Portfolio</p>
+      <h1>Staged Intelligence<br /><span>Tech</span></h1>
+      <p class="tagline">Demos, projects, writing and inventions stemming from Staged Intelligence — a proprietary methodology for phase-based system orchestration.</p>
+    </header>
+
+    <div class="divider"></div>
+
+    <nav class="nav-grid">
+
+      <a href="/about" class="nav-item">
+        <div class="nav-left">
+          <span class="nav-index">01</span>
+          <span class="nav-title">What is Staged Intelligence</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-soon">Coming Soon</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="/clients" class="nav-item">
+        <div class="nav-left">
+          <span class="nav-index">02</span>
+          <span class="nav-title">Who I Work With</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-soon">Coming Soon</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="/hand" class="nav-item live">
+        <div class="nav-left">
+          <span class="nav-index">03</span>
+          <span class="nav-title">Ball Gripper</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-live">Live Demo</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="/dance" class="nav-item">
+        <div class="nav-left">
+          <span class="nav-index">04</span>
+          <span class="nav-title">Never Ending Dance</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-soon">Coming Soon</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="/sprint" class="nav-item">
+        <div class="nav-left">
+          <span class="nav-index">05</span>
+          <span class="nav-title">Sprint Guardian</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-soon">Coming Soon</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="/physics" class="nav-item">
+        <div class="nav-left">
+          <span class="nav-index">06</span>
+          <span class="nav-title">Staged Physics</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-soon">Coming Soon</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="/games" class="nav-item">
+        <div class="nav-left">
+          <span class="nav-index">07</span>
+          <span class="nav-title">Games</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-soon">Coming Soon</span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+    </nav>
+
+    <footer>
+      &copy; 2026 Staged Intelligence Tech &mdash; All rights reserved
+    </footer>
+  </div>
+
+  <script>
+    // Mark coming-soon items after animation completes
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+      const isLive = el.classList.contains('live');
+      if (!isLive) {
+        setTimeout(() => {
+          el.style.opacity = '0.45';
+          el.classList.add('animated');
+          el.setAttribute('tabindex', '-1');
+          el.addEventListener('click', e => e.preventDefault());
+        }, 900 + i * 50);
+      }
+    });
+  </script>
+</body>
+</html>
