@@ -234,6 +234,60 @@
     .nav-item:nth-child(5) { animation: fadeUp 0.5s ease forwards 0.75s; }
     .nav-item:nth-child(6) { animation: fadeUp 0.5s ease forwards 0.8s; }
     .nav-item:nth-child(7) { animation: fadeUp 0.5s ease forwards 0.85s; }
+    .nav-item:nth-child(8) { animation: fadeUp 0.5s ease forwards 0.9s; }
+    .nav-item:nth-child(9) { animation: fadeUp 0.5s ease forwards 0.95s; }
+
+    /* dropdown */
+    .nav-dropdown {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      overflow: visible;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: -1px;
+      right: -1px;
+      background: var(--surface);
+      border: 1px solid rgba(68,170,255,0.2);
+      border-top: none;
+      z-index: 100;
+    }
+
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown.open .dropdown-menu {
+      display: block;
+    }
+
+    .dropdown-link {
+      display: block;
+      padding: 20px 32px;
+      padding-left: 76px;
+      color: var(--text);
+      text-decoration: none;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .dropdown-link:hover {
+      background: rgba(68,170,255,0.06);
+      color: var(--accent);
+    }
+
+    .dropdown-arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+
+    .nav-dropdown:hover .dropdown-arrow,
+    .nav-dropdown.open .dropdown-arrow {
+      transform: rotate(180deg);
+    }
 
     footer {
       margin-top: 80px;
@@ -293,24 +347,24 @@
         </div>
       </a>
 
-      <a href="/anatomy" class="nav-item live">
+      <a href="/anatomy" class="nav-item">
         <div class="nav-left">
           <span class="nav-index">03a</span>
           <span class="nav-title">Hand Anatomy</span>
         </div>
         <div class="nav-right">
-          <span class="tag tag-live">Live Demo</span>
+          <span class="tag tag-soon">Coming Soon</span>
           <span class="arrow">→</span>
         </div>
       </a>
 
-      <a href="/hand" class="nav-item live">
+      <a href="/hand" class="nav-item">
         <div class="nav-left">
           <span class="nav-index">03</span>
           <span class="nav-title">Ball Gripper</span>
         </div>
         <div class="nav-right">
-          <span class="tag tag-live">Live Demo</span>
+          <span class="tag tag-soon">Coming Soon</span>
           <span class="arrow">→</span>
         </div>
       </a>
@@ -348,13 +402,27 @@
         </div>
       </a>
 
-      <a href="/games" class="nav-item">
+      <div class="nav-item live nav-dropdown" tabindex="0">
         <div class="nav-left">
           <span class="nav-index">07</span>
           <span class="nav-title">Games</span>
         </div>
         <div class="nav-right">
-          <span class="tag tag-soon">Coming Soon</span>
+          <span class="tag tag-live">Live</span>
+          <span class="arrow dropdown-arrow">▾</span>
+        </div>
+        <div class="dropdown-menu">
+          <a href="https://sort-kseug1dq8-mke-biz-tech.vercel.app" class="dropdown-link" target="_blank" rel="noopener noreferrer">Sort It</a>
+        </div>
+      </div>
+
+      <a href="https://substack.com/@stagedintelligence" class="nav-item live" target="_blank" rel="noopener noreferrer">
+        <div class="nav-left">
+          <span class="nav-index">08</span>
+          <span class="nav-title">Writing and Content</span>
+        </div>
+        <div class="nav-right">
+          <span class="tag tag-live">Live</span>
           <span class="arrow">→</span>
         </div>
       </a>
@@ -379,6 +447,27 @@
         }, 900 + i * 50);
       }
     });
+
+    // Games dropdown toggle on click/keyboard
+    const dropdown = document.querySelector('.nav-dropdown');
+    if (dropdown) {
+      dropdown.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-link')) {
+          this.classList.toggle('open');
+        }
+      });
+      dropdown.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.classList.toggle('open');
+        }
+      });
+      document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+        }
+      });
+    }
   </script>
 </body>
 </html>

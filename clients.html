@@ -13,9 +13,6 @@
       color: #e8e8f0;
       font-family: 'Space Mono', monospace;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     body::before {
       content: '';
@@ -27,20 +24,62 @@
       background-size: 40px 40px;
       pointer-events: none;
     }
-    .center { text-align: center; position: relative; z-index: 1; }
-    .eyebrow { font-size: 10px; letter-spacing: 0.3em; color: rgba(68,170,255,0.6); text-transform: uppercase; margin-bottom: 20px; }
-    h1 { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 800; margin-bottom: 16px; opacity: 0.15; }
-    .soon { font-size: 11px; letter-spacing: 0.2em; color: rgba(255,255,255,0.2); text-transform: uppercase; margin-bottom: 40px; }
-    a { font-size: 11px; letter-spacing: 0.15em; color: rgba(68,170,255,0.6); text-decoration: none; text-transform: uppercase; }
-    a:hover { color: rgba(68,170,255,1); }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 32px 120px;
+    }
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      color: rgba(68,170,255,0.6);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800;
+      margin-bottom: 48px;
+      line-height: 1.1;
+    }
+    .content p {
+      font-size: 14px;
+      line-height: 2;
+      color: rgba(232,232,240,0.85);
+      margin-bottom: 28px;
+      max-width: 680px;
+    }
+    .content a {
+      color: rgba(68,170,255,0.8);
+      text-decoration: none;
+    }
+    .content a:hover { color: rgba(68,170,255,1); }
+    .back {
+      display: inline-block;
+      margin-top: 60px;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: rgba(68,170,255,0.6);
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+    .back:hover { color: rgba(68,170,255,1); }
   </style>
 </head>
 <body>
-  <div class="center">
+  <div class="container">
     <p class="eyebrow">Staged Intelligence Tech</p>
     <h1>Who I Work With</h1>
-    <p class="soon">Coming Soon</p>
-    <a href="/">← Back to Portfolio</a>
+    <div class="content">
+      <p>Yavohonna Ford works with founders, operators, and teams who are building with AI and automation but need a clearer framework for making decisions about what to build, when, and why.</p>
+      <p>Clients come from web3, creative industries, healthcare administration, and technology — at every level of AI familiarity, from complete beginners to technical teams who need better structure around their existing systems.</p>
+      <p>Engagements range from workshops and independent study tools to direct consulting on system design and workflow classification. If you're ready to define the work before you build, this is the right place to start.</p>
+      <p>Contact: <a href="mailto:yavohonna@mkebiztech.com">yavohonna@mkebiztech.com</a></p>
+    </div>
+    <a href="/" class="back">← Back to Portfolio</a>
   </div>
 </body>
 </html>
